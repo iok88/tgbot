@@ -1,0 +1,26 @@
+name: Deploy on push
+
+on:
+  push:
+    branches:
+      - main      # Или твоя основная ветка, например, master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/iok/tgbot/tgbot  # Укажи свой путь!
+            git pull origin main
+            # Здесь можно добавить другие команды, например:
+            # npm install && npm run build
+            # sudo systemctl restart my-app.service
