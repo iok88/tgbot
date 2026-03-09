@@ -1,29 +1,10 @@
-name: Deploy
+script: |
+  cd /root/iok/tgbot/tgbot
+  git fetch origin
+  git reset --hard origin/main
 
-on:
-  push:
-    branches:
-      - main
+  # ставим зависимости в venv
+  source venv/bin/activate
+  pip install -r requirements.txt
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /root/iok/tgbot/tgbot
-
-            git fetch origin
-            git reset --hard origin/main
-
-            pip3 install -r requirements.txt
-
-            sudo systemctl restart tgbot
+  sudo systemctl restart tgbot
