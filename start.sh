@@ -2,4 +2,8 @@
 
 cd /root/iok/tgbot/tgbot
 
-/usr/bin/python3 bot.py
+# активируем venv
+source venv/bin/activate
+
+# запускаем бота
+python bot.py
