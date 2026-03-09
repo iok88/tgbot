@@ -1,0 +1,48 @@
+CREATE USER messenger_user WITH PASSWORD '123Sed@$^';
+# Статус конкретной службы
+systemctl status mu_chass_bot.service
+
+# Проверить, активна ли служба
+systemctl is-active mu_chass_bot.service
+
+# Проверить, включена ли автозагрузка
+systemctl is-enabled mu_chass_bot.service
+
+# Остановить службу (но она запустится при перезагрузке)
+sudo systemctl stop mu_chass_bot.service
+
+# Запустить службу
+sudo systemctl start mu_chass_bot.service
+
+# Перезапустить службу
+sudo systemctl restart mu_chass_bot.service
+
+# Отключить автозагрузку (но не останавливать сейчас)
+sudo systemctl disable mu_chass_bot.service
+
+# Включить автозагрузку
+sudo systemctl enable mu_chass_bot.service
+
+# Комбинация: остановить И отключить автозагрузку
+sudo systemctl disable --now mu_chass_bot.service
+
+# Посмотреть логи этой службы
+sudo journalctl -u mu_chass_bot.service
+
+# Логи за последние 30 минут
+sudo journalctl -u mu_chass_bot.service --since "30 min ago"
+
+# Логи в реальном времени (как tail -f)
+sudo journalctl -u mu_chass_bot.service -f
+
+Безопасные практики:
+Не запускать от root - создавайте отдельного пользователя:
+
+bash
+# Создать пользователя для бота
+sudo adduser --system --no-create-home mybotuser
+
+# Или без оболочки (еще безопаснее)
+sudo adduser --system --shell /bin/false mybotuser
+
+	

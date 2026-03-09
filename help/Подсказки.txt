@@ -1,0 +1,181 @@
+Автозапуск и автоматическое обновление после пуша на гитхаб
+--------        ---------         ----------
+1. Создаём сервис systemd
+На сервере:
+sudo nano /etc/systemd/system/tgbot.service
+
+Пример файла:
+[Unit]
+Description=Telegram Bot
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/iok/tgbot/tgbot
+ExecStart=/usr/bin/python3 bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+Если файл запуска — скрипт, укажи его:
+
+ExecStart=/root/iok/tgbot/tgbot/start.sh
+2. Перечитываем systemd
+sudo systemctl daemon-reload
+3. Добавляем в автозагрузку
+sudo systemctl enable tgbot
+
+Это и есть автозагрузка при старте сервера.
+
+4. Запускаем
+sudo systemctl start tgbot
+5. Проверяем
+sudo systemctl status tgbot
+6. Смотреть логи
+
+Очень удобно:
+
+journalctl -u tgbot -f
+
+Логи будут идти в реальном времени.
+
+7. Перезапуск из GitHub Deploy
+
+Теперь в workflow можно добавить:
+
+cd /root/iok/tgbot/tgbot
+
+git fetch origin
+git reset --hard origin/main
+
+sudo systemctl restart tgbot
+
+Тогда процесс такой:
+
+git push
+↓
+GitHub Actions
+↓
+SSH на сервер
+↓
+обновление кода
+↓
+перезапуск бота
+8. Чтобы GitHub показывал лог деплоя
+
+Можно добавить проверку:
+
+sudo systemctl restart tgbot
+sudo systemctl status tgbot --no-pager
+
+И GitHub покажет состояние сервиса прямо в Actions.
+
+Маленький совет из практики
+
+Лучше сделать запуск через bash-скрипт, например:
+
+start.sh
+#!/bin/bash
+cd /root/iok/tgbot/tgbot
+/usr/bin/python3 bot.py
+
+И тогда сервис:
+
+ExecStart=/root/iok/tgbot/tgbot/start.sh
+
+Это удобно, если потом добавятся:
+
+переменные окружения
+
+виртуальное окружение Python
+
+подготовка перед запуском
+
+Если хочешь, могу ещё показать очень полезную вещь для твоего проекта —
+как сделать, чтобы:
+
+если бот падает — systemd автоматически его перезапускал и писал причину.
+
+Это спасает от половины ночных проблем на сервере.
+
+______//----///------//----///-----//------//------//------//-------//------/--/-----/-----/-----
+В Ubuntu автозагрузка сейчас почти полностью управляется через systemd. Поэтому смотреть нужно именно сервисы.
+
+Вот несколько нормальных способов проверить.
+
+1. Посмотреть все сервисы, которые запускаются при старте системы
+systemctl list-unit-files --type=service --state=enabled
+
+Ты увидишь список вроде:
+
+tgbot.service        enabled
+ssh.service          enabled
+cron.service         enabled
+
+Если твой сервис tgbot.service там есть — значит он в автозагрузке.
+
+2. Проверить конкретный сервис
+
+Самый простой способ:
+
+systemctl is-enabled tgbot
+
+Ответ будет:
+
+enabled
+
+или
+
+disabled
+3. Посмотреть статус сервиса
+systemctl status tgbot
+
+Там будет видно:
+
+запущен ли он
+
+когда запускался
+
+ошибки
+
+PID процесса
+
+4. Посмотреть, что реально сейчас запущено
+systemctl list-units --type=service --state=running
+
+Там отображаются все активные сервисы.
+
+5. Проверить автозагрузку старым способом (иногда полезно)
+
+Иногда ещё встречаются задания в cron:
+
+crontab -l
+
+или
+
+sudo crontab -l
+
+Там может быть строка вроде:
+
+@reboot /path/to/script.sh
+6. Быстрая проверка именно твоего бота
+
+Можно просто:
+
+ps aux | grep bot.py
+
+или
+
+ps aux | grep tgbot
+
+💡 Маленький практический совет.
+Если сервер когда-нибудь начнёт медленно грузиться, полезно посмотреть:
+
+systemd-analyze blame
+
+Это покажет что именно запускается при старте и сколько времени занимает.
+
+Если хочешь, могу ещё показать очень полезную команду, которая показывает все автозапуски Linux сразу (systemd + cron + rc.local). 
+Администраторы её часто используют при проверке серверов.
